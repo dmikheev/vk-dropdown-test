@@ -1,0 +1,33 @@
+{
+  "name": "vk-dropdown-test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "webpack-dev-server --hot",
+    "build": "webpack --env.prod=true"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dmikheev/vk-dropdown-test.git"
+  },
+  "author": "Dmitry Mikheev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmikheev/vk-dropdown-test/issues"
+  },
+  "homepage": "https://github.com/dmikheev/vk-dropdown-test#readme",
+  "devDependencies": {
+    "@babel/core": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "babel-loader": "^8.0.4",
+    "eslint": "^5.10.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-loader": "^2.1.1",
+    "eslint-plugin-import": "^2.14.0",
+    "file-loader": "^2.0.0",
+    "webpack": "^4.27.1",
+    "webpack-cli": "^3.1.2",
+    "webpack-dev-server": "^3.1.10"
+  }
+}
