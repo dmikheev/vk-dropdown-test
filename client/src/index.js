@@ -4,4 +4,3 @@ export default class VkTestDropdown {
         element.innerHTML = 'dropdown';
     }
 }
-global.VkTestDropdown = VkTestDropdown;

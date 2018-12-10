@@ -13,9 +13,13 @@ module.exports = function config(env = {}) {
         entry: 'index.js',
         mode: isProd ? 'production' : 'development',
         output: {
-            publicPath,
-            path: distPath,
             filename: '[name].bundle.js',
+            library: 'VkTestDropdown',
+            libraryExport: 'default',
+            libraryTarget: 'umd',
+            path: distPath,
+            publicPath,
+            umdNamedDefine: true,
         },
         module: {
             rules: [{
