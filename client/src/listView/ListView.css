@@ -1,3 +1,15 @@
+.list {
+    max-height: 243px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.item {
+    border-top: 1px solid #e7e8ec;
+}
+.item:first-child {
+    border-top: none;
+}
 .item__no_results {
     height: 50px;
     padding: 18px 15px 0;
