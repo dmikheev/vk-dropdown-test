@@ -1,4 +1,5 @@
 const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const sourcePath = path.join(__dirname, './src');
 const distPath = path.join(__dirname, './dist');
@@ -7,7 +8,11 @@ module.exports = function config(env = {}) {
     const isProd = !!env.prod;
     const publicPath = !isProd ? 'http://localhost:3000/' : '/';
 
+    const plugins = isProd ? [new MiniCssExtractPlugin()] : undefined;
+    const stylesLoader = isProd ? MiniCssExtractPlugin.loader : 'style-loader';
+
     return {
+        plugins,
         context: sourcePath,
         devtool: isProd ? false : 'cheap-module-source-map',
         entry: 'index.js',
@@ -25,6 +30,15 @@ module.exports = function config(env = {}) {
             rules: [{
                 oneOf: [
                     {
+                        test: /\.(png|jpg|gif)$/i,
+                        use: [{
+                            loader: 'url-loader',
+                            options: {
+                                limit: 8192,
+                            },
+                        }],
+                    },
+                    {
                         test: /\.js$/,
                         exclude: /node_modules/,
                         use: [
@@ -36,8 +50,8 @@ module.exports = function config(env = {}) {
                         test: /\.css$/,
                         exclude: /node_modules/,
                         use: [
-                            'style-loader',
-                            'css-loader?modules&camelCase&importLoaders=1&localIdentName=[path][name]__[local]--[hash:base64:5]',
+                            stylesLoader,
+                            'css-loader?modules&camelCase&localIdentName=[name]__[local]--[hash:base64:5]',
                         ],
                     },
                     {
@@ -68,18 +82,7 @@ module.exports = function config(env = {}) {
             headers: { 'Access-Control-Allow-Origin': '*' },
             hot: true,
             stats: {
-                // assets: true,
-                // children: false,
-                // chunks: false,
-                // hash: false,
                 modules: false,
-                // publicPath: false,
-                // timings: true,
-                // version: false,
-                // warnings: true,
-                // colors: {
-                //     green: '\u001b[32m',
-                // }
             },
         },
     };

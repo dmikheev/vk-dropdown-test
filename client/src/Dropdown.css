@@ -1,0 +1,43 @@
+.wrap {
+    position: relative;
+    width: 379px;
+    padding: 2px 2px 1px;
+    border: 1px solid #d3d9de;
+    box-sizing: border-box;
+    border-radius: 2px;
+    font-size: 13px;
+    line-height: 1.154;
+    background: #fff;
+}
+
+.arrow {
+    float: right;
+    width: 21px;
+    height: 25px;
+    background: url(images/dropdown_arrow.png) no-repeat 2px 50%;
+    cursor: pointer;
+}
+
+.input {
+    display: inline-block;
+    width: 352px;
+    height: 25px;
+    padding: 4px 6px 7px;
+    border: none;
+    box-sizing: border-box;
+    outline: none;
+    font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica Neue, sans-serif;
+}
+
+.list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 1px -1px 0;
+    border: solid #c9d0d6;
+    border-width: 0 1px 1px;
+    border-radius: 0 0 2px 2px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.1);
+}

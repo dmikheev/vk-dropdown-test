@@ -1,6 +1,10 @@
 {
   "extends": "airbnb-base",
+  "env": {
+    "browser": true
+  },
   "rules": {
-    "indent": ["error", 4]
+    "indent": ["error", 4, { "ignoredNodes": ["TemplateLiteral > *"] }],
+    "no-underscore-dangle": "off"
   }
 }
