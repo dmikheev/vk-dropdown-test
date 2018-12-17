@@ -2,6 +2,10 @@ import DropdownView from './DropdownView';
 import UsersStore from './UsersStore';
 
 function getUsersFilteredByQuery(users, query) {
+    if (!query) {
+        return users;
+    }
+
     const normalizedQuery = query.toLowerCase();
 
     return users.filter((user) => {
@@ -115,7 +119,12 @@ export default class DropdownMain {
 
     onFilterQueryChange(value) {
         this.state.filterQuery = value;
-        this.filterUsers();
+
+        const filteredUsers = this.getFilteredUsers();
+        if (filteredUsers.length) {
+            this.filterUsers();
+        }
+
         this.loadUsers();
     }
 

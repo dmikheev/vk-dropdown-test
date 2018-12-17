@@ -260,6 +260,8 @@ export default class DropdownView {
     removeInput() {
         this.element.removeChild(this.children.input);
         this.children.input = null;
+
+        this.options.onInputChange('');
     }
 
     toggleAddItemIfNeeded() {
