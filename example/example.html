@@ -59,12 +59,9 @@
     <!--<script type="text/javascript" src="../client/dist/main.bundle.js"></script>-->
     <script type="text/javascript" src="http://localhost:3000/main.bundle.js"></script>
     <script type="text/javascript">
-        new VkTestDropdown(document.getElementById('dropdown'), {
+        var dropdown = new VkTestDropdown(document.getElementById('dropdown'), {
             usersLoadConfig: {
-                url: 'http://localhost/api/users/search',
-                mapUsersFunc: function(response) {
-                    return response;
-                },
+                url: 'http://localhost/api/users/search'
             },
         });
     </script>

@@ -9,17 +9,21 @@ function renderArrow() {
     return arrow;
 }
 
-function renderInput() {
-    const input = document.createElement('input');
-    input.classList.add(styles.input);
-    input.placeholder = 'Введите имя друга';
-    input.type = 'text';
+/**
+ * @callback DropdownView~loadMoreUsers
+ * @param {number} offset
+ */
 
-    return input;
-}
+/**
+ * @callback DropdownView~onInputChange
+ * @param {string} value
+ */
 
 /**
  * @typedef {Object} DropdownViewProps
+ * @property {DropdownView~loadMoreUsers} loadMoreUsers
+ * @property {DropdownView~onInputChange} onInputChange
+ * @property {number} totalUsersCount
  * @property {User[]} users
  */
 
@@ -29,6 +33,11 @@ export default class DropdownView {
      */
     constructor(options) {
         this.element = null;
+
+        this.options = {
+            loadMoreUsers: options.loadMoreUsers,
+            onInputChange: options.onInputChange,
+        };
 
         /**
          * @type {{arrow: null, list: ListView | null}}
@@ -40,10 +49,12 @@ export default class DropdownView {
 
         this.state = {
             isOpen: false,
+            totalUsersCount: options.totalUsersCount,
             users: options.users,
         };
 
         this.onGlobalClick = this.onGlobalClick.bind(this);
+        this.onInputChange = this.onInputChange.bind(this);
 
         window.addEventListener('click', this.onGlobalClick, false);
     }
@@ -65,7 +76,7 @@ export default class DropdownView {
         element.appendChild(arrow);
         this.children.arrow = arrow;
 
-        const input = renderInput();
+        const input = this.renderInput();
         element.appendChild(input);
 
         this.element = element;
@@ -96,6 +107,11 @@ export default class DropdownView {
         }
     }
 
+    onInputChange(event) {
+        const { value } = event.target;
+        this.options.onInputChange(value);
+    }
+
     updateOpen(isOpen) {
         this.state.isOpen = isOpen;
 
@@ -106,18 +122,35 @@ export default class DropdownView {
         }
     }
 
-    updateUsers(users) {
+    replaceUsers(users, totalCount) {
+        this.state.totalUsersCount = totalCount;
         this.state.users = users;
 
         if (!this.children.list) {
             return;
         }
 
-        this.children.list.updateUsers(users);
+        this.children.list.replaceUsers(users, totalCount);
+    }
+
+    updateUsers(users, totalCount) {
+        this.state.totalUsersCount = totalCount;
+        this.state.users = users;
+
+        if (!this.children.list) {
+            return;
+        }
+
+        this.children.list.updateUsers(users, totalCount);
     }
 
     renderList() {
-        const list = new ListView({ className: styles.list, users: this.state.users });
+        const list = new ListView({
+            className: styles.list,
+            loadMoreUsers: this.options.loadMoreUsers,
+            totalUsersCount: this.state.totalUsersCount,
+            users: this.state.users,
+        });
         list.render();
         this.element.appendChild(list.element);
 
@@ -127,5 +160,15 @@ export default class DropdownView {
     destroyList() {
         this.element.removeChild(this.children.list.element);
         this.children.list = null;
+    }
+
+    renderInput() {
+        const input = document.createElement('input');
+        input.classList.add(styles.input);
+        input.placeholder = 'Введите имя друга';
+        input.type = 'text';
+        input.oninput = this.onInputChange;
+
+        return input;
     }
 }

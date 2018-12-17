@@ -2,12 +2,20 @@ import UserView from './userView/UserView';
 
 import styles from './ListView.css';
 
-const VIEWPORT_USERS_COUNT = 25;
+const BOTTOM_USERS_TO_LOAD_MORE_COUNT = 100;
 const ITEM_HEIGHT = 51;
+const LIST_HEIGHT = 243;
+const VIEWPORT_USERS_COUNT = 25;
+
+/**
+ * @callback ListView~loadMoreUsers
+ * @param {number} offset
+ */
 
 /**
  * @typedef ListViewOptions
  * @property {string} [className]
+ * @property {ListView~loadMoreUsers} loadMoreUsers
  * @property {User[]} users
  */
 
@@ -18,12 +26,18 @@ export default class ListView {
     constructor(options) {
         this.element = null;
 
-        this.scrollContainer = null;
-        this.state = {
+        this.options = {
             className: options.className,
+            loadMoreUsers: options.loadMoreUsers,
+        };
+        this.state = {
+            areUsersLoading: false,
             topVisibleUserIdx: 0,
+            totalUsersCount: 0,
             users: options.users,
         };
+
+        this.scrollContainer = null;
 
         this.onScroll = this.onScroll.bind(this);
     }
@@ -32,8 +46,8 @@ export default class ListView {
         this.element = document.createElement('div');
 
         this.element.classList.add(styles.list);
-        if (this.state.className) {
-            this.element.classList.add(this.state.className);
+        if (this.options.className) {
+            this.element.classList.add(this.options.className);
         }
 
         this.element.onscroll = this.onScroll;
@@ -42,10 +56,26 @@ export default class ListView {
     }
 
     onScroll() {
-        this.reRenderUsers();
+        this.reRenderUsersIfNeeded();
+        this.loadUsersIfNeeded();
     }
 
-    updateUsers(users) {
+    replaceUsers(users, totalCount) {
+        this.state.totalUsersCount = totalCount;
+
+        if (this.state.users === users) {
+            return;
+        }
+
+        this.state.users = users;
+
+        this.element.scrollTop = 0;
+        this.renderUsers();
+    }
+
+    updateUsers(users, totalCount) {
+        this.state.totalUsersCount = totalCount;
+
         if (this.state.users === users) {
             return;
         }
@@ -56,7 +86,7 @@ export default class ListView {
     }
 
     renderUsers() {
-        this.state.topVisibleUserIdx = 0;
+        const topVisibleUserIdx = this.getTopVisibleUserIndex();
 
         if (this.state.users.length === 0) {
             this.element.innerHTML = (
@@ -71,11 +101,17 @@ export default class ListView {
         this.scrollContainer.classList.add(styles.scroll_container);
         this.scrollContainer.style.height = `${this.state.users.length * ITEM_HEIGHT}px`;
 
-        for (let i = 0; i < VIEWPORT_USERS_COUNT; i++) {
+        const lastUserIdx = Math.min(
+            this.state.users.length - 1,
+            topVisibleUserIdx + VIEWPORT_USERS_COUNT - 1,
+        );
+        for (let i = topVisibleUserIdx; i <= lastUserIdx; i++) {
             this.renderUser(i);
         }
 
         this.element.appendChild(this.scrollContainer);
+
+        this.state.topVisibleUserIdx = topVisibleUserIdx;
     }
 
     renderUser(idx, prepend = false) {
@@ -95,16 +131,8 @@ export default class ListView {
         }
     }
 
-    reRenderUsers() {
-        const { scrollTop } = this.element;
-        let newTopVisibleUserIdx = Math.floor(scrollTop / ITEM_HEIGHT) - 10;
-        const lastTopUserIdx = this.state.users.length - VIEWPORT_USERS_COUNT;
-        if (newTopVisibleUserIdx > lastTopUserIdx) {
-            newTopVisibleUserIdx = lastTopUserIdx;
-        }
-        if (newTopVisibleUserIdx < 0) {
-            newTopVisibleUserIdx = 0;
-        }
+    reRenderUsersIfNeeded() {
+        const newTopVisibleUserIdx = this.getTopVisibleUserIndex();
 
         if (newTopVisibleUserIdx > this.state.topVisibleUserIdx) {
             const delta = newTopVisibleUserIdx - this.state.topVisibleUserIdx;
@@ -143,5 +171,31 @@ export default class ListView {
         }
 
         this.state.topVisibleUserIdx = newTopVisibleUserIdx;
+    }
+
+    loadUsersIfNeeded() {
+        if (this.state.users.length === this.state.totalUsersCount) {
+            return;
+        }
+
+        const scrollTopToLoadUsers = (this.state.users.length - BOTTOM_USERS_TO_LOAD_MORE_COUNT)
+            * ITEM_HEIGHT - LIST_HEIGHT;
+        if (this.element.scrollTop > scrollTopToLoadUsers) {
+            this.options.loadMoreUsers(this.state.users.length);
+        }
+    }
+
+    getTopVisibleUserIndex() {
+        const { scrollTop } = this.element;
+        let newTopVisibleUserIdx = Math.floor(scrollTop / ITEM_HEIGHT) - 10;
+        const lastTopUserIdx = this.state.users.length - VIEWPORT_USERS_COUNT;
+        if (newTopVisibleUserIdx > lastTopUserIdx) {
+            newTopVisibleUserIdx = lastTopUserIdx;
+        }
+        if (newTopVisibleUserIdx < 0) {
+            newTopVisibleUserIdx = 0;
+        }
+
+        return newTopVisibleUserIdx;
     }
 }

@@ -5,7 +5,7 @@ import request from './utils/request';
  * @property {number} id
  * @property {string} name
  * @property {string} lastName
- * @property {string} link
+ * @property {string} domain
  * @property {string} photoPath
  * @property {string} occupation
  */
@@ -31,12 +31,13 @@ export default class UsersLoader {
         this.config = config;
     }
 
-    load(cb) {
+    load(options, cb) {
         request({
             method: this.config.method,
             url: this.config.url,
+            params: options,
             onSuccess: (response) => {
-                cb(this.config.mapUsersFunc(response));
+                cb(response);
             },
         });
     }
