@@ -1,8 +1,13 @@
 import styles from './UserView.css';
 
 /**
+ * @callback UserView~onClick
+ */
+
+/**
  * @typedef {Object} UserViewOptions
  * @property {string} [className]
+ * @property {UserView~onClick} [onClick]
  * @property {string} [style]
  * @property {User} user
  */
@@ -13,6 +18,8 @@ export default class UserView {
      */
     constructor(options) {
         this.options = options;
+
+        this.onClick = this.onClick.bind(this);
     }
 
     render() {
@@ -25,6 +32,9 @@ export default class UserView {
         if (this.options.style) {
             this.element.setAttribute('style', this.options.style);
         }
+        if (this.options.onClick) {
+            this.element.onclick = this.onClick;
+        }
 
         this.element.innerHTML = (
 `<div class="${styles.wrap_inner}">
@@ -35,5 +45,9 @@ export default class UserView {
     </div>
 </div>`
         );
+    }
+
+    onClick() {
+        this.options.onClick(this.options.user.id);
     }
 }

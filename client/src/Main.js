@@ -1,7 +1,7 @@
 import DropdownView from './DropdownView';
-import UsersLoader from './UsersLoader';
+import UsersStore from './UsersStore';
 
-function getFilteredUsers(users, query) {
+function getUsersFilteredByQuery(users, query) {
     const normalizedQuery = query.toLowerCase();
 
     return users.filter((user) => {
@@ -21,6 +21,7 @@ function getFilteredUsers(users, query) {
 
 /**
  * @typedef {Object} DropdownMainOptions
+ * @property {boolean} isSelectionMultiple
  * @property {UserLoadConfig} usersLoadConfig
  */
 
@@ -32,9 +33,14 @@ export default class DropdownMain {
     constructor(element, options) {
         this.element = element;
 
+        this.options = {
+            isSelectionMultiple: options.isSelectionMultiple,
+        };
         this.state = {
+            areAllUsersLoaded: false,
             filterQuery: '',
-            totalUsersCount: 0,
+            selectedUser: null,
+            selectedUsers: [],
             users: [],
         };
 
@@ -44,8 +50,10 @@ export default class DropdownMain {
 
         this.loadMoreUsers = this.loadMoreUsers.bind(this);
         this.onFilterQueryChange = this.onFilterQueryChange.bind(this);
+        this.onListUserClick = this.onListUserClick.bind(this);
+        this.onSelectedUserRemoveClick = this.onSelectedUserRemoveClick.bind(this);
 
-        this.usersLoader = new UsersLoader(options.usersLoadConfig);
+        UsersStore.initLoader(options.usersLoadConfig);
 
         this.render();
         this.loadUsers();
@@ -53,9 +61,14 @@ export default class DropdownMain {
 
     render() {
         const dropdownView = new DropdownView({
+            isSelectionMultiple: this.options.isSelectionMultiple,
             loadMoreUsers: this.loadMoreUsers,
             onInputChange: this.onFilterQueryChange,
-            totalUsersCount: this.state.totalUsersCount,
+            onListUserClick: this.onListUserClick,
+            onSelectedUserRemoveClick: this.onSelectedUserRemoveClick,
+            selectedUser: this.state.selectedUser,
+            selectedUsers: this.state.selectedUsers,
+            areAllUsersLoaded: this.state.areAllUsersLoaded,
             users: this.state.users,
         });
         dropdownView.renderTo(this.element);
@@ -64,29 +77,31 @@ export default class DropdownMain {
     }
 
     filterUsers() {
-        const filteredUsers = getFilteredUsers(this.state.users, this.state.filterQuery);
+        const filteredUsers = this.getFilteredUsers();
 
         this.children.dropdownView.replaceUsers(filteredUsers, filteredUsers.length);
     }
 
-    updateUsers(users, totalCount) {
-        this.state.totalUsersCount = totalCount;
+    updateUsers(users, areAllUsersLoaded) {
+        this.state.areAllUsersLoaded = areAllUsersLoaded;
         this.state.users = users;
-        this.children.dropdownView.updateUsers(users, totalCount);
+
+        const filteredUsers = this.getUsersFilteredFromSelected(users);
+        this.children.dropdownView.updateUsers(filteredUsers, areAllUsersLoaded);
     }
 
     loadUsers() {
-        this.usersLoader.load({ offset: 0, query: this.state.filterQuery }, (response) => {
+        UsersStore.load({ offset: 0, query: this.state.filterQuery }, (response) => {
             if (response.query !== this.state.filterQuery) {
                 return;
             }
 
-            this.updateUsers(response.users, response.totalCount);
+            this.updateUsers(response.users, response.users.length === 0);
         });
     }
 
     loadMoreUsers(offset) {
-        this.usersLoader.load({ offset, query: this.state.filterQuery }, (response) => {
+        UsersStore.load({ offset, query: this.state.filterQuery }, (response) => {
             if (response.query !== this.state.filterQuery) {
                 return;
             }
@@ -94,7 +109,7 @@ export default class DropdownMain {
             const users = this.state.users.slice(0);
             users.splice(response.offset, response.users.length, ...response.users);
 
-            this.updateUsers(users, response.totalCount);
+            this.updateUsers(users, response.users.length === 0);
         });
     }
 
@@ -102,5 +117,48 @@ export default class DropdownMain {
         this.state.filterQuery = value;
         this.filterUsers();
         this.loadUsers();
+    }
+
+    onListUserClick(userId) {
+        if (this.options.isSelectionMultiple) {
+            this.updateSelectedUsers(this.state.selectedUsers.concat(userId));
+        } else {
+            this.updateSelectedUser(userId);
+        }
+    }
+
+    updateSelectedUser(userId) {
+        this.state.selectedUser = userId;
+        this.children.dropdownView.updateSelectedUser(UsersStore.getUser(userId));
+        this.filterUsers();
+    }
+
+    updateSelectedUsers(userIds) {
+        this.state.selectedUsers = userIds;
+        this.children.dropdownView.updateSelectedUsers(userIds.map(UsersStore.getUser, UsersStore));
+        this.filterUsers();
+    }
+
+    onSelectedUserRemoveClick(userId) {
+        if (this.options.isSelectionMultiple) {
+            this.updateSelectedUsers(this.state.selectedUsers.filter(id => id !== userId));
+        } else {
+            this.updateSelectedUser(null);
+        }
+    }
+
+    getFilteredUsers() {
+        const queryFilteredUsers = getUsersFilteredByQuery(
+            this.state.users,
+            this.state.filterQuery,
+        );
+        return this.getUsersFilteredFromSelected(queryFilteredUsers);
+    }
+
+    getUsersFilteredFromSelected(users) {
+        return users.filter(user => (
+            this.options.isSelectionMultiple
+                ? this.state.selectedUsers.indexOf(user.id) === -1
+                : this.state.selectedUser !== user.id));
     }
 }

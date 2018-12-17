@@ -4,7 +4,7 @@ import styles from './ListView.css';
 
 const BOTTOM_USERS_TO_LOAD_MORE_COUNT = 100;
 const ITEM_HEIGHT = 51;
-const LIST_HEIGHT = 243;
+const MAX_LIST_HEIGHT = 243;
 const VIEWPORT_USERS_COUNT = 25;
 
 /**
@@ -14,8 +14,10 @@ const VIEWPORT_USERS_COUNT = 25;
 
 /**
  * @typedef ListViewOptions
+ * @property {boolean} areAllUsersLoaded
  * @property {string} [className]
  * @property {ListView~loadMoreUsers} loadMoreUsers
+ * @property {UserView~onClick} onUserClick
  * @property {User[]} users
  */
 
@@ -29,15 +31,17 @@ export default class ListView {
         this.options = {
             className: options.className,
             loadMoreUsers: options.loadMoreUsers,
+            onUserClick: options.onUserClick,
         };
         this.state = {
+            areAllUsersLoaded: options.areAllUsersLoaded,
             areUsersLoading: false,
             topVisibleUserIdx: 0,
-            totalUsersCount: 0,
             users: options.users,
         };
 
-        this.scrollContainer = null;
+        this.itemsContainer = null;
+        this.scrollSentinel = null;
 
         this.onScroll = this.onScroll.bind(this);
     }
@@ -61,7 +65,7 @@ export default class ListView {
     }
 
     replaceUsers(users, totalCount) {
-        this.state.totalUsersCount = totalCount;
+        this.state.areAllUsersLoaded = totalCount;
 
         if (this.state.users === users) {
             return;
@@ -74,7 +78,7 @@ export default class ListView {
     }
 
     updateUsers(users, totalCount) {
-        this.state.totalUsersCount = totalCount;
+        this.state.areAllUsersLoaded = totalCount;
 
         if (this.state.users === users) {
             return;
@@ -89,6 +93,7 @@ export default class ListView {
         const topVisibleUserIdx = this.getTopVisibleUserIndex();
 
         if (this.state.users.length === 0) {
+            this.element.style.height = null;
             this.element.innerHTML = (
                 `<div class="${styles.item__no_results}">Пользователь не найден</div>`
             );
@@ -96,10 +101,18 @@ export default class ListView {
         }
 
         this.element.innerHTML = '';
+        const listHeight = Math.min(
+            this.state.users.length * ITEM_HEIGHT,
+            MAX_LIST_HEIGHT,
+        );
+        this.element.style.height = `${listHeight}px`;
 
-        this.scrollContainer = document.createElement('div');
-        this.scrollContainer.classList.add(styles.scroll_container);
-        this.scrollContainer.style.height = `${this.state.users.length * ITEM_HEIGHT}px`;
+        this.scrollSentinel = document.createElement('div');
+        this.scrollSentinel.classList.add(styles.scroll_sentinel);
+        this.scrollSentinel.style.transform = `translateY(${this.state.users.length * ITEM_HEIGHT - 2}px)`;
+
+        this.itemsContainer = document.createElement('div');
+        this.itemsContainer.classList.add(styles.items_container);
 
         const lastUserIdx = Math.min(
             this.state.users.length - 1,
@@ -109,7 +122,8 @@ export default class ListView {
             this.renderUser(i);
         }
 
-        this.element.appendChild(this.scrollContainer);
+        this.element.appendChild(this.itemsContainer);
+        this.element.appendChild(this.scrollSentinel);
 
         this.state.topVisibleUserIdx = topVisibleUserIdx;
     }
@@ -119,15 +133,16 @@ export default class ListView {
 
         const userView = new UserView({
             className: styles.item,
+            onClick: this.options.onUserClick,
             style: `transform: translateY(${idx * ITEM_HEIGHT}px)`,
             user,
         });
         userView.render();
 
         if (!prepend) {
-            this.scrollContainer.appendChild(userView.element);
+            this.itemsContainer.appendChild(userView.element);
         } else {
-            this.scrollContainer.insertBefore(userView.element, this.scrollContainer.children[0]);
+            this.itemsContainer.insertBefore(userView.element, this.itemsContainer.children[0]);
         }
     }
 
@@ -136,16 +151,22 @@ export default class ListView {
 
         if (newTopVisibleUserIdx > this.state.topVisibleUserIdx) {
             const delta = newTopVisibleUserIdx - this.state.topVisibleUserIdx;
+            let firstUserToRenderIdx;
+            const lastUserToRenderIdx = Math.min(
+                newTopVisibleUserIdx + VIEWPORT_USERS_COUNT,
+                this.state.users.length - 1,
+            );
             if (delta > VIEWPORT_USERS_COUNT) {
-                this.scrollContainer.innerHTML = '';
+                this.itemsContainer.innerHTML = '';
+                firstUserToRenderIdx = newTopVisibleUserIdx;
             } else {
                 for (let i = 0; i < delta; i++) {
-                    this.scrollContainer.removeChild(this.scrollContainer.children[0]);
+                    this.itemsContainer.removeChild(this.itemsContainer.children[0]);
                 }
+
+                firstUserToRenderIdx = lastUserToRenderIdx - delta;
             }
 
-            const firstUserToRenderIdx = this.state.topVisibleUserIdx + VIEWPORT_USERS_COUNT - 1;
-            const lastUserToRenderIdx = newTopVisibleUserIdx + VIEWPORT_USERS_COUNT - 1;
             for (let i = firstUserToRenderIdx; i <= lastUserToRenderIdx; i++) {
                 this.renderUser(i);
             }
@@ -153,18 +174,21 @@ export default class ListView {
 
         if (newTopVisibleUserIdx < this.state.topVisibleUserIdx) {
             const delta = this.state.topVisibleUserIdx - newTopVisibleUserIdx;
+            const firstUserToRenderIdx = newTopVisibleUserIdx;
+            let lastUserToRenderIdx;
             if (delta > VIEWPORT_USERS_COUNT) {
-                this.scrollContainer.innerHTML = '';
+                this.itemsContainer.innerHTML = '';
+                lastUserToRenderIdx = newTopVisibleUserIdx + VIEWPORT_USERS_COUNT;
             } else {
                 for (let i = 0; i < delta; i++) {
-                    const lastChild = this.scrollContainer
-                        .children[this.scrollContainer.children.length - 1];
-                    this.scrollContainer.removeChild(lastChild);
+                    const lastChild = this.itemsContainer
+                        .children[this.itemsContainer.children.length - 1];
+                    this.itemsContainer.removeChild(lastChild);
                 }
+
+                lastUserToRenderIdx = newTopVisibleUserIdx + delta;
             }
 
-            const firstUserToRenderIdx = newTopVisibleUserIdx;
-            const lastUserToRenderIdx = this.state.topVisibleUserIdx - 1;
             for (let i = lastUserToRenderIdx; i >= firstUserToRenderIdx; i--) {
                 this.renderUser(i, true);
             }
@@ -174,12 +198,12 @@ export default class ListView {
     }
 
     loadUsersIfNeeded() {
-        if (this.state.users.length === this.state.totalUsersCount) {
+        if (this.state.areAllUsersLoaded) {
             return;
         }
 
         const scrollTopToLoadUsers = (this.state.users.length - BOTTOM_USERS_TO_LOAD_MORE_COUNT)
-            * ITEM_HEIGHT - LIST_HEIGHT;
+            * ITEM_HEIGHT - MAX_LIST_HEIGHT;
         if (this.element.scrollTop > scrollTopToLoadUsers) {
             this.options.loadMoreUsers(this.state.users.length);
         }

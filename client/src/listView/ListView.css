@@ -4,7 +4,15 @@
     overflow-y: auto;
 }
 
-.scroll_container {
+.scroll_sentinel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+}
+
+.items_container {
+    position: absolute;
+    width: 100%;
     transform: translateY(-1px);
 }
 

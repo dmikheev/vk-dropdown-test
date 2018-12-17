@@ -11,7 +11,6 @@ function searchUsers(req, res) {
     res.json({
         offset: offset,
         query: query,
-        totalCount: filteredUsers.length,
         users: filteredUsers.slice(offset, offset + SEND_USERS_COUNT),
     });
 }
