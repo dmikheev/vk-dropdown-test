@@ -4,11 +4,17 @@
     overflow-y: auto;
 }
 
+.scroll_container {
+    transform: translateY(-1px);
+}
+
 .item {
+    position: absolute;
+    width: 100%;
     border-top: 1px solid #e7e8ec;
 }
 .item:first-child {
-    border-top: none;
+    border-top-color: transparent;
 }
 .item__no_results {
     height: 50px;

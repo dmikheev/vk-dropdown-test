@@ -1,7 +1,5 @@
 .wrap {
     height: 50px;
-    padding: 8px 12px;
-    box-sizing: border-box;
     font-size: 12.5px;
     line-height: 15px;
     background-color: #fff;
@@ -9,6 +7,10 @@
 }
 .wrap:hover {
     background-color: #f0f2f5;
+}
+
+.wrap_inner {
+    padding: 8px 12px;
 }
 
 .photo {

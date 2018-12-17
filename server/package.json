@@ -1,0 +1,26 @@
+{
+  "name": "vk-dropdown-test-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "watch": "nodemon --delay 0.5 --watch ./ server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dmikheev/vk-dropdown-test.git"
+  },
+  "author": "Dmitry Mikheev",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmikheev/vk-dropdown-test/issues"
+  },
+  "homepage": "https://github.com/dmikheev/vk-dropdown-test#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  },
+  "devDependencies": {
+    "nodemon": "^1.18.9"
+  }
+}

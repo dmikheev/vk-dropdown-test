@@ -25,9 +25,9 @@ function renderInput() {
 
 export default class DropdownView {
     /**
-     * @param {DropdownViewProps} props
+     * @param {DropdownViewProps} options
      */
-    constructor(props) {
+    constructor(options) {
         this.element = null;
 
         /**
@@ -38,12 +38,9 @@ export default class DropdownView {
             list: null,
         };
 
-        this.prevProps = null;
-        this.props = props;
-
-        this.prevState = null;
         this.state = {
             isOpen: false,
+            users: options.users,
         };
 
         this.onGlobalClick = this.onGlobalClick.bind(this);
@@ -74,27 +71,6 @@ export default class DropdownView {
         this.element = element;
     }
 
-    updateProps(props) {
-        this.prevProps = this.props;
-        this.props = props;
-
-        this.update();
-    }
-
-    update() {
-        if (this.prevProps) {
-            if (this.props.users !== this.prevProps.users) {
-                this.updateUsers();
-            }
-        }
-
-        if (this.prevState) {
-            if (this.state.isOpen !== this.prevState.isOpen) {
-                this.updateOpen();
-            }
-        }
-    }
-
     /**
      * @param {MouseEvent} event
      * @private
@@ -109,53 +85,39 @@ export default class DropdownView {
             return;
         }
 
-        this.setState({
-            isOpen: false,
-        });
+        this.updateOpen(false);
     }
 
     onWrapClick(event) {
         if (!this.state.isOpen) {
-            this.setState({
-                isOpen: true,
-            });
+            this.updateOpen(true);
         } else if (event.target === this.children.arrow) {
-            this.setState({
-                isOpen: false,
-            });
+            this.updateOpen(false);
         }
     }
 
-    setState(partialState) {
-        this.prevState = this.state;
-        this.state = {
-            ...this.state,
-            ...partialState,
-        };
+    updateOpen(isOpen) {
+        this.state.isOpen = isOpen;
 
-        this.update();
-    }
-
-    updateOpen() {
-        if (this.state.isOpen) {
+        if (isOpen) {
             this.renderList();
         } else {
             this.destroyList();
         }
     }
 
-    updateUsers() {
+    updateUsers(users) {
+        this.state.users = users;
+
         if (!this.children.list) {
             return;
         }
 
-        this.children.list.updateProps({
-            users: this.props.users,
-        });
+        this.children.list.updateUsers(users);
     }
 
     renderList() {
-        const list = new ListView({ className: styles.list, users: this.props.users });
+        const list = new ListView({ className: styles.list, users: this.state.users });
         list.render();
         this.element.appendChild(list.element);
 

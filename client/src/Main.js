@@ -1,14 +1,19 @@
 import DropdownView from './DropdownView';
 import UsersLoader from './UsersLoader';
 
+/**
+ * @typedef {Object} DropdownMainOptions
+ * @property {UserLoadConfig} usersLoadConfig
+ */
+
 export default class DropdownMain {
     /**
      * @param {HTMLElement} element
+     * @param {DropdownMainOptions} options
      */
-    constructor(element) {
+    constructor(element, options) {
         this.element = element;
 
-        this.prevState = null;
         this.state = {
             users: [],
         };
@@ -16,6 +21,8 @@ export default class DropdownMain {
         this.children = {
             dropdownView: null,
         };
+
+        this.usersLoader = new UsersLoader(options.usersLoadConfig);
 
         this.render();
         this.loadUsers();
@@ -30,35 +37,14 @@ export default class DropdownMain {
         this.children.dropdownView = dropdownView;
     }
 
-    update() {
-        if (this.prevState) {
-            if (this.prevState.users !== this.state.users) {
-                this.updateUsers();
-            }
-        }
-    }
-
-    updateUsers() {
-        this.children.dropdownView.updateProps({
-            users: this.state.users,
-        });
+    updateUsers(users) {
+        this.state.users = users;
+        this.children.dropdownView.updateUsers(users);
     }
 
     loadUsers() {
-        UsersLoader.load((users) => {
-            this.setState({
-                users,
-            });
+        this.usersLoader.load((users) => {
+            this.updateUsers(users);
         });
-    }
-
-    setState(partialState) {
-        this.prevState = this.state;
-        this.state = {
-            ...this.state,
-            ...partialState,
-        };
-
-        this.update();
     }
 }

@@ -5,6 +5,7 @@
   },
   "rules": {
     "indent": ["error", 4, { "ignoredNodes": ["TemplateLiteral > *"] }],
+    "no-plusplus": ["error", { "allowForLoopAfterthoughts": true }],
     "no-underscore-dangle": "off"
   }
 }
