@@ -1,4 +1,5 @@
-import request from './utils/request';
+import UsersCache from './UsersCache';
+import Request from './utils/Request';
 
 /**
  * @typedef {Object} User
@@ -11,16 +12,15 @@ import request from './utils/request';
  */
 
 /**
- * @callback MapUsersFunc
- * @param {*} response
- * @returns User[]
- */
-
-/**
  * @typedef {Object} UserLoadConfig
  * @property {string} [method=GET]
  * @property {string} url
- * @property {MapUsersFunc} mapUsersFunc
+ */
+
+/**
+ * @typedef {Object} UsersLoader~requestOptions
+ * @property {number} [offset]
+ * @property {string} [query]
  */
 
 export default class UsersLoader {
@@ -28,17 +28,48 @@ export default class UsersLoader {
      * @param {UserLoadConfig} config
      */
     constructor(config) {
+        this.cache = new UsersCache();
         this.config = config;
     }
 
+    /**
+     * @param {UsersLoader~requestOptions} options
+     * @param cb
+     */
     load(options, cb) {
-        request({
+        const cachedObject = this.cache.getCacheObject(options.query, options.offset);
+        if (cachedObject) {
+            if (cachedObject.data) {
+                cb(cachedObject.data);
+                return null;
+            }
+
+            if (cachedObject.isFetching) {
+                cachedObject.request.addCallback((response) => {
+                    cb(response);
+                });
+                return null;
+            }
+        }
+
+        const request = new Request({
             method: this.config.method,
             url: this.config.url,
             params: options,
-            onSuccess: (response) => {
-                cb(response);
-            },
         });
+
+        this.cache.onRequestStart(options.query, options.offset, request);
+
+        request.addCallback((response) => {
+            this.cache.onRequestSuccess(options.query, options.offset, response);
+            cb(response);
+        });
+        request.addErrback(() => {
+            this.cache.onRequestError(options.query, options.offset);
+        });
+
+        request.send();
+
+        return request;
     }
 }

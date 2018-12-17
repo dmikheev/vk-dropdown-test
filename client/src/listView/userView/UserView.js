@@ -38,7 +38,7 @@ export default class UserView {
 
         this.element.innerHTML = (
 `<div class="${styles.wrap_inner}">
-    <div class="${styles.photo}" style="background-image: url(${this.options.user.photoPath})"></div>
+    <img class="${styles.photo}" width="34" height="34" src="${this.options.user.photoPath}">
     <div class="${styles.content}">
         <div class="${styles.name}">${this.options.user.name} ${this.options.user.lastName}</div>
         <div class="${styles.occupation}">${this.options.user.occupation}</div>

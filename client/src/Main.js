@@ -43,6 +43,7 @@ export default class DropdownMain {
         this.state = {
             areAllUsersLoaded: false,
             filterQuery: '',
+            lastRequest: null,
             selectedUser: null,
             selectedUsers: [],
             users: [],
@@ -83,7 +84,7 @@ export default class DropdownMain {
     filterUsers() {
         const filteredUsers = this.getFilteredUsers();
 
-        this.children.dropdownView.replaceUsers(filteredUsers, filteredUsers.length);
+        this.children.dropdownView.replaceUsers(filteredUsers, this.state.areAllUsersLoaded);
     }
 
     updateUsers(users, areAllUsersLoaded) {
@@ -95,7 +96,12 @@ export default class DropdownMain {
     }
 
     loadUsers() {
-        UsersStore.load({ offset: 0, query: this.state.filterQuery }, (response) => {
+        this.abortLastRequest();
+
+        this.state.lastRequest = UsersStore.load({
+            offset: 0,
+            query: this.state.filterQuery,
+        }, (response) => {
             if (response.query !== this.state.filterQuery) {
                 return;
             }
@@ -104,8 +110,13 @@ export default class DropdownMain {
         });
     }
 
-    loadMoreUsers(offset) {
-        UsersStore.load({ offset, query: this.state.filterQuery }, (response) => {
+    loadMoreUsers() {
+        this.abortLastRequest();
+
+        this.state.lastRequest = UsersStore.load({
+            offset: this.state.users.length,
+            query: this.state.filterQuery,
+        }, (response) => {
             if (response.query !== this.state.filterQuery) {
                 return;
             }
@@ -169,5 +180,11 @@ export default class DropdownMain {
             this.options.isSelectionMultiple
                 ? this.state.selectedUsers.indexOf(user.id) === -1
                 : this.state.selectedUser !== user.id));
+    }
+
+    abortLastRequest() {
+        if (this.state.lastRequest && !this.state.lastRequest.isCompleted()) {
+            this.state.lastRequest.abort();
+        }
     }
 }

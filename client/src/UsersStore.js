@@ -13,7 +13,7 @@ class UsersStore {
     }
 
     load(options, cb) {
-        this.usersLoader.load(options, (response) => {
+        return this.usersLoader.load(options, (response) => {
             this.saveUsersData(response.users);
             cb(response);
         });
