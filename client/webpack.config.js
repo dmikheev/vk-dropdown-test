@@ -1,5 +1,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const sourcePath = path.join(__dirname, './src');
 const distPath = path.join(__dirname, './dist');
@@ -11,12 +13,23 @@ module.exports = function config(env = {}) {
     const plugins = isProd ? [new MiniCssExtractPlugin()] : undefined;
     const stylesLoader = isProd ? MiniCssExtractPlugin.loader : 'style-loader';
 
+    const optimization = isProd ? {
+        minimizer: [
+            new TerserPlugin({
+                cache: true,
+                parallel: true,
+            }),
+            new OptimizeCSSAssetsPlugin(),
+        ],
+    } : undefined;
+
     return {
         plugins,
         context: sourcePath,
         devtool: isProd ? false : 'cheap-module-source-map',
         entry: 'index.js',
         mode: isProd ? 'production' : 'development',
+        optimization,
         output: {
             filename: '[name].bundle.js',
             library: 'VkTestDropdown',
