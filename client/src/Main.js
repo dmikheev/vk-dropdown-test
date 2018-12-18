@@ -1,3 +1,5 @@
+import { getSearchQueryVariants } from '../../shared/getSearchQueryVariants';
+
 import DropdownView from './DropdownView';
 import UsersStore from './UsersStore';
 
@@ -7,15 +9,22 @@ function getUsersFilteredByQuery(users, query) {
     }
 
     const normalizedQuery = query.toLowerCase();
+    const queryVariants = getSearchQueryVariants(normalizedQuery);
 
     return users.filter((user) => {
-        if (user.name.toLowerCase().indexOf(normalizedQuery) === 0) {
+        if (queryVariants.some(
+            queryVariant => user.name.toLowerCase().indexOf(queryVariant) === 0,
+        )) {
             return true;
         }
-        if (user.lastName.toLowerCase().indexOf(normalizedQuery) === 0) {
+        if (queryVariants.some(
+            queryVariant => user.lastName.toLowerCase().indexOf(queryVariant) === 0,
+        )) {
             return true;
         }
-        if (user.occupation.toLowerCase().indexOf(normalizedQuery) === 0) {
+        if (queryVariants.some(
+            queryVariant => user.occupation.toLowerCase().indexOf(queryVariant) === 0,
+        )) {
             return true;
         }
 
@@ -25,6 +34,7 @@ function getUsersFilteredByQuery(users, query) {
 
 /**
  * @typedef {Object} DropdownMainOptions
+ * @property {boolean} [areUserPhotosDisabled]
  * @property {boolean} isSelectionMultiple
  * @property {UserLoadConfig} usersLoadConfig
  */
@@ -38,6 +48,7 @@ export default class DropdownMain {
         this.element = element;
 
         this.options = {
+            areUserPhotosDisabled: options.areUserPhotosDisabled,
             isSelectionMultiple: options.isSelectionMultiple,
         };
         this.state = {
@@ -66,6 +77,7 @@ export default class DropdownMain {
 
     render() {
         const dropdownView = new DropdownView({
+            areUserPhotosDisabled: this.options.areUserPhotosDisabled,
             isSelectionMultiple: this.options.isSelectionMultiple,
             loadMoreUsers: this.loadMoreUsers,
             onInputChange: this.onFilterQueryChange,

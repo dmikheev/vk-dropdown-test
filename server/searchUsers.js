@@ -1,3 +1,5 @@
+const getSearchQueryVariants = require('../shared/getSearchQueryVariants').getSearchQueryVariants;
+
 const users = require('./users.json');
 
 const SEND_USERS_COUNT = 1000;
@@ -22,21 +24,31 @@ function filterUsers(query) {
         return users;
     }
 
-    const lowerQuery = query.toLowerCase();
-    return users.filter((user) => isUserSuitableForQuery(user, lowerQuery));
+    return users.filter((user) => isUserSuitableForQuery(user, query));
 }
 
 function isUserSuitableForQuery(user, query) {
-    if (user.name.toLowerCase().indexOf(query) === 0) {
+    const normalizedQuery = query.toLowerCase();
+    const queryVariants = getSearchQueryVariants(normalizedQuery);
+
+    if (queryVariants.some(
+        queryVariant => user.name.toLowerCase().indexOf(queryVariant) === 0,
+    )) {
         return true;
     }
-    if (user.lastName.toLowerCase().indexOf(query) === 0) {
+    if (queryVariants.some(
+        queryVariant => user.lastName.toLowerCase().indexOf(queryVariant) === 0,
+    )) {
         return true;
     }
-    if (user.domain.toLowerCase().indexOf(query) === 0) {
+    if (queryVariants.some(
+        queryVariant => user.domain.toLowerCase().indexOf(queryVariant) === 0,
+    )) {
         return true;
     }
-    if (user.occupation.toLowerCase().indexOf(query) === 0) {
+    if (queryVariants.some(
+        queryVariant => user.occupation.toLowerCase().indexOf(queryVariant) === 0,
+    )) {
         return true;
     }
 

@@ -15,6 +15,7 @@ const VIEWPORT_USERS_COUNT = 25;
 /**
  * @typedef ListViewOptions
  * @property {boolean} areAllUsersLoaded
+ * @property {boolean} areUserPhotosDisabled
  * @property {string} [className]
  * @property {ListView~loadMoreUsers} loadMoreUsers
  * @property {UserView~onClick} onUserClick
@@ -29,6 +30,7 @@ export default class ListView {
         this.element = null;
 
         this.options = {
+            areUserPhotosDisabled: options.areUserPhotosDisabled,
             className: options.className,
             loadMoreUsers: options.loadMoreUsers,
             onUserClick: options.onUserClick,
@@ -133,6 +135,7 @@ export default class ListView {
 
         const userView = new UserView({
             className: styles.item,
+            arePhotosDisabled: this.options.areUserPhotosDisabled,
             onClick: this.options.onUserClick,
             style: `transform: translateY(${idx * ITEM_HEIGHT}px)`,
             user,

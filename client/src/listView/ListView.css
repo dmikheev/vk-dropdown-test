@@ -1,6 +1,7 @@
 .list {
     max-height: 243px;
     box-sizing: border-box;
+    overflow-x: hidden;
     overflow-y: auto;
 }
 

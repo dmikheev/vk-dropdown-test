@@ -6,6 +6,7 @@ import styles from './UserView.css';
 
 /**
  * @typedef {Object} UserViewOptions
+ * @property {boolean} arePhotosDisabled
  * @property {string} [className]
  * @property {UserView~onClick} [onClick]
  * @property {string} [style]
@@ -36,10 +37,15 @@ export default class UserView {
             this.element.onclick = this.onClick;
         }
 
+        const photoHtml = this.options.arePhotosDisabled ? ''
+            : `<img class="${styles.photo}" width="34" height="34" src="${this.options.user.photoPath}">`;
+        const contentClassAttribute = this.options.arePhotosDisabled ? ''
+            : ` class=${styles.content__with_photo}`;
+
         this.element.innerHTML = (
 `<div class="${styles.wrap_inner}">
-    <img class="${styles.photo}" width="34" height="34" src="${this.options.user.photoPath}">
-    <div class="${styles.content}">
+    ${photoHtml}
+    <div${contentClassAttribute}>
         <div class="${styles.name}">${this.options.user.name} ${this.options.user.lastName}</div>
         <div class="${styles.occupation}">${this.options.user.occupation}</div>
     </div>
