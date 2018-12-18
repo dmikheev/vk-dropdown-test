@@ -1,4 +1,4 @@
-const getSearchQueryVariants = require('../shared/getSearchQueryVariants').getSearchQueryVariants;
+const getSearchQueryVariants = require('../client/shared/getSearchQueryVariants').getSearchQueryVariants;
 
 const users = require('./users.json');
 

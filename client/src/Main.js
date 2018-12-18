@@ -1,4 +1,4 @@
-import { getSearchQueryVariants } from '../../shared/getSearchQueryVariants';
+import { getSearchQueryVariants } from '../shared/getSearchQueryVariants';
 
 import DropdownView from './DropdownView';
 import UsersStore from './UsersStore';
