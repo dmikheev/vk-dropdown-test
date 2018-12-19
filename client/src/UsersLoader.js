@@ -1,4 +1,3 @@
-import UsersCache from './UsersCache';
 import Request from './utils/Request';
 
 /**
@@ -18,9 +17,10 @@ import Request from './utils/Request';
  */
 
 /**
- * @typedef {Object} UsersLoader~requestOptions
- * @property {number} [offset]
+ * @typedef {Object} LastRequestData
+ * @property {Request} request
  * @property {string} [query]
+ * @property {number} [offset]
  */
 
 export default class UsersLoader {
@@ -28,45 +28,47 @@ export default class UsersLoader {
      * @param {UserLoadConfig} config
      */
     constructor(config) {
-        this.cache = new UsersCache();
         this.config = config;
+
+        /** @type LastRequestData|null */
+        this.lastRequestData = null;
     }
 
     /**
-     * @param {UsersLoader~requestOptions} options
+     * @param {string} [query]
+     * @param {number} [offset]
      * @param cb
+     * @return {Request}
      */
-    load(options, cb) {
-        const cachedObject = this.cache.getCacheObject(options.query, options.offset);
-        if (cachedObject) {
-            if (cachedObject.data) {
-                cb(cachedObject.data);
-                return null;
+    load(query, offset, cb) {
+        if (this.lastRequestData) {
+            if (this.lastRequestData.query === query && this.lastRequestData.offset === offset) {
+                return this.lastRequestData.request;
             }
 
-            if (cachedObject.isFetching) {
-                cachedObject.request.addCallback((response) => {
-                    cb(response);
-                });
-                return null;
+            if (!this.lastRequestData.request.isCompleted()) {
+                this.lastRequestData.request.abort();
             }
         }
 
         const request = new Request({
             method: this.config.method,
             url: this.config.url,
-            params: options,
+            params: {
+                query,
+                offset,
+            },
         });
-
-        this.cache.onRequestStart(options.query, options.offset, request);
 
         request.addCallback((response) => {
-            this.cache.onRequestSuccess(options.query, options.offset, response);
             cb(response);
         });
-        request.addErrback(() => {
-            this.cache.onRequestError(options.query, options.offset);
-        });
+
+        this.lastRequestData = {
+            query,
+            offset,
+            request,
+        };
 
         request.send();
 

@@ -12,8 +12,8 @@ class UsersStore {
         this.usersLoader = new UsersLoader(config);
     }
 
-    load(options, cb) {
-        return this.usersLoader.load(options, (response) => {
+    load(query, offset, cb) {
+        return this.usersLoader.load(query, offset, (response) => {
             this.saveUsersData(response.users);
             cb(response);
         });
@@ -21,6 +21,10 @@ class UsersStore {
 
     getUser(id) {
         return this.usersData[id];
+    }
+
+    getAll() {
+        return Object.keys(this.usersData).map(key => this.usersData[key]);
     }
 
     saveUsersData(users) {

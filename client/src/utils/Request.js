@@ -74,16 +74,14 @@ export default class Request {
         const method = this.options.method || 'GET';
         let { url } = this.options;
         if (this.options.params) {
-            let queryString = '';
-            Object.keys(this.options.params).forEach((key, idx) => {
-                if (idx !== 0) {
-                    queryString += '&';
-                }
+            const queryString = Object.keys(this.options.params)
+                .filter(paramName => typeof this.options.params[paramName] !== 'undefined')
+                .map(paramName => `${paramName}=${this.options.params[paramName]}`)
+                .join('&');
 
-                queryString += `${key}=${this.options.params[key]}`;
-            });
-
-            url += `?${queryString}`;
+            if (queryString) {
+                url += `?${queryString}`;
+            }
         }
 
         this.xhr.open(method.toUpperCase(), url, true);

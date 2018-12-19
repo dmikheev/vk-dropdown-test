@@ -1,6 +1,7 @@
 import { getSearchQueryVariants } from '../shared/getSearchQueryVariants';
 
 import DropdownView from './DropdownView';
+import ServerFiltersCache from './ServerFiltersCache';
 import UsersStore from './UsersStore';
 
 function getUsersFilteredByQuery(users, query) {
@@ -35,6 +36,7 @@ function getUsersFilteredByQuery(users, query) {
 /**
  * @typedef {Object} DropdownMainOptions
  * @property {boolean} [areUserPhotosDisabled]
+ * @property {User[]} initialUsers
  * @property {boolean} isSelectionMultiple
  * @property {UserLoadConfig} usersLoadConfig
  */
@@ -52,12 +54,11 @@ export default class DropdownMain {
             isSelectionMultiple: options.isSelectionMultiple,
         };
         this.state = {
-            areAllUsersLoaded: false,
             filterQuery: '',
             lastRequest: null,
             selectedUser: null,
             selectedUsers: [],
-            users: [],
+            users: options.initialUsers,
         };
 
         this.children = {
@@ -70,9 +71,12 @@ export default class DropdownMain {
         this.onSelectedUserRemoveClick = this.onSelectedUserRemoveClick.bind(this);
 
         UsersStore.initLoader(options.usersLoadConfig);
+        UsersStore.saveUsersData(options.initialUsers);
+
+        this.serverFiltersCache = new ServerFiltersCache();
+        this.serverFiltersCache.saveFilterUsers(options.initialUsers.map(user => user.id), '');
 
         this.render();
-        this.loadUsers();
     }
 
     render() {
@@ -85,7 +89,7 @@ export default class DropdownMain {
             onSelectedUserRemoveClick: this.onSelectedUserRemoveClick,
             selectedUser: this.state.selectedUser,
             selectedUsers: this.state.selectedUsers,
-            areAllUsersLoaded: this.state.areAllUsersLoaded,
+            areAllUsersLoaded: false,
             users: this.state.users,
         });
         dropdownView.renderTo(this.element);
@@ -96,11 +100,10 @@ export default class DropdownMain {
     filterUsers() {
         const filteredUsers = this.getFilteredUsers();
 
-        this.children.dropdownView.replaceUsers(filteredUsers, this.state.areAllUsersLoaded);
+        this.children.dropdownView.replaceUsers(filteredUsers, false);
     }
 
     updateUsers(users, areAllUsersLoaded) {
-        this.state.areAllUsersLoaded = areAllUsersLoaded;
         this.state.users = users;
 
         const filteredUsers = this.getUsersFilteredFromSelected(users);
@@ -108,12 +111,9 @@ export default class DropdownMain {
     }
 
     loadUsers() {
-        this.abortLastRequest();
+        this.state.lastRequest = UsersStore.load(this.state.filterQuery, 0, (response) => {
+            this.serverFiltersCache.saveResponseData(response);
 
-        this.state.lastRequest = UsersStore.load({
-            offset: 0,
-            query: this.state.filterQuery,
-        }, (response) => {
             if (response.query !== this.state.filterQuery) {
                 return;
             }
@@ -123,31 +123,38 @@ export default class DropdownMain {
     }
 
     loadMoreUsers() {
-        this.abortLastRequest();
+        this.state.lastRequest = UsersStore.load(
+            this.state.filterQuery,
+            this.state.users.length,
+            (response) => {
+                this.serverFiltersCache.saveResponseData(response);
 
-        this.state.lastRequest = UsersStore.load({
-            offset: this.state.users.length,
-            query: this.state.filterQuery,
-        }, (response) => {
-            if (response.query !== this.state.filterQuery) {
-                return;
-            }
+                if (response.query !== this.state.filterQuery) {
+                    return;
+                }
 
-            const users = this.state.users.slice(0);
-            users.splice(response.offset, response.users.length, ...response.users);
+                const users = this.state.users.slice(0);
+                users.splice(response.offset, response.users.length, ...response.users);
 
-            this.updateUsers(users, response.users.length === 0);
-        });
+                this.updateUsers(users, response.users.length === 0);
+            },
+        );
     }
 
     onFilterQueryChange(value) {
         this.state.filterQuery = value;
 
-        const filteredUsers = this.getFilteredUsers();
-        if (filteredUsers.length) {
-            this.filterUsers();
+        const savedFilter = this.serverFiltersCache.getFilter(value);
+        if (savedFilter) {
+            this.updateUsers(
+                savedFilter.userIds.map(id => UsersStore.getUser(id)),
+                savedFilter.isFullyLoaded,
+            );
+
+            return;
         }
 
+        this.filterUsers();
         this.loadUsers();
     }
 
@@ -181,7 +188,7 @@ export default class DropdownMain {
 
     getFilteredUsers() {
         const queryFilteredUsers = getUsersFilteredByQuery(
-            this.state.users,
+            UsersStore.getAll(),
             this.state.filterQuery,
         );
         return this.getUsersFilteredFromSelected(queryFilteredUsers);
@@ -192,11 +199,5 @@ export default class DropdownMain {
             this.options.isSelectionMultiple
                 ? this.state.selectedUsers.indexOf(user.id) === -1
                 : this.state.selectedUser !== user.id));
-    }
-
-    abortLastRequest() {
-        if (this.state.lastRequest && !this.state.lastRequest.isCompleted()) {
-            this.state.lastRequest.abort();
-        }
     }
 }
