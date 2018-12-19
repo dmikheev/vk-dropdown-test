@@ -12,6 +12,12 @@ class UsersStore {
         this.usersLoader = new UsersLoader(config);
     }
 
+    /**
+     * @param {string} [query]
+     * @param {number} [offset]
+     * @param cb
+     * @return {Request}
+     */
     load(query, offset, cb) {
         return this.usersLoader.load(query, offset, (response) => {
             this.saveUsersData(response.users);

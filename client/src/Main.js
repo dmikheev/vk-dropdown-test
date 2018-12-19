@@ -3,6 +3,9 @@ import { getSearchQueryVariants } from '../shared/getSearchQueryVariants';
 import DropdownView from './DropdownView';
 import ServerFiltersCache from './ServerFiltersCache';
 import UsersStore from './UsersStore';
+import debounce from './utils/debounce';
+
+const USERS_LOAD_ON_FILTER_DEBOUNCE_INTERVAL = 200;
 
 function getUsersFilteredByQuery(users, query) {
     if (!query) {
@@ -41,6 +44,15 @@ function getUsersFilteredByQuery(users, query) {
  * @property {UserLoadConfig} usersLoadConfig
  */
 
+/**
+ * @typedef {Object} DropdownMainState
+ * @property {string} filterQuery
+ * @property {Request|null} lastRequest
+ * @property {number} selectedUser
+ * @property {number[]} selectedUsers
+ * @property {User[]} users
+ */
+
 export default class DropdownMain {
     /**
      * @param {HTMLElement} element
@@ -53,6 +65,8 @@ export default class DropdownMain {
             areUserPhotosDisabled: options.areUserPhotosDisabled,
             isSelectionMultiple: options.isSelectionMultiple,
         };
+
+        /** @type {DropdownMainState} */
         this.state = {
             filterQuery: '',
             lastRequest: null,
@@ -65,10 +79,16 @@ export default class DropdownMain {
             dropdownView: null,
         };
 
+        this.loadUsersForDebounce = this.loadUsersForDebounce.bind(this);
         this.loadMoreUsers = this.loadMoreUsers.bind(this);
         this.onFilterQueryChange = this.onFilterQueryChange.bind(this);
         this.onListUserClick = this.onListUserClick.bind(this);
         this.onSelectedUserRemoveClick = this.onSelectedUserRemoveClick.bind(this);
+
+        this.loadUsersDebounced = debounce(
+            this.loadUsersForDebounce,
+            USERS_LOAD_ON_FILTER_DEBOUNCE_INTERVAL,
+        );
 
         UsersStore.initLoader(options.usersLoadConfig);
         UsersStore.saveUsersData(options.initialUsers);
@@ -87,8 +107,8 @@ export default class DropdownMain {
             onInputChange: this.onFilterQueryChange,
             onListUserClick: this.onListUserClick,
             onSelectedUserRemoveClick: this.onSelectedUserRemoveClick,
-            selectedUser: this.state.selectedUser,
-            selectedUsers: this.state.selectedUsers,
+            selectedUser: UsersStore.getUser(this.state.selectedUser),
+            selectedUsers: this.state.selectedUsers.map(id => UsersStore.getUser(id)),
             areAllUsersLoaded: false,
             users: this.state.users,
         });
@@ -110,7 +130,18 @@ export default class DropdownMain {
         this.children.dropdownView.updateUsers(filteredUsers, areAllUsersLoaded);
     }
 
-    loadUsers() {
+    loadUsersForDebounce(originalQuery) {
+        if (originalQuery !== this.state.filterQuery
+            && this.state.lastRequest
+            && !this.state.lastRequest.isCompleted()
+        ) {
+            this.state.lastRequest.abort();
+        }
+
+        if (this.serverFiltersCache.getFilter(this.state.filterQuery)) {
+            return;
+        }
+
         this.state.lastRequest = UsersStore.load(this.state.filterQuery, 0, (response) => {
             this.serverFiltersCache.saveResponseData(response);
 
@@ -155,7 +186,7 @@ export default class DropdownMain {
         }
 
         this.filterUsers();
-        this.loadUsers();
+        this.loadUsersDebounced(value);
     }
 
     onListUserClick(userId) {
