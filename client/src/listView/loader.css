@@ -1,0 +1,75 @@
+.loader {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    overflow: hidden;
+}
+
+.loader_circle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    animation: circle_animation 1s ease-in infinite;
+}
+.loader_circle:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 46%;
+    width: 14%;
+    height: 14%;
+    border-radius: 50%;
+    background-color: #888;
+}
+.loader_circle__1 {
+    transform: rotate(0deg);
+    animation-delay: 0s;
+}
+.loader_circle__2 {
+    transform: rotate(36deg);
+    animation-delay: -0.9s;
+}
+.loader_circle__3 {
+    transform: rotate(72deg);
+    animation-delay: -0.8s;
+}
+.loader_circle__4 {
+    transform: rotate(108deg);
+    animation-delay: -0.7s;
+}
+.loader_circle__5 {
+    transform: rotate(144deg);
+    animation-delay: -0.6s;
+}
+.loader_circle__6 {
+    transform: rotate(180deg);
+    animation-delay: -0.5s;
+}
+.loader_circle__7 {
+    transform: rotate(216deg);
+    animation-delay: -0.4s;
+}
+.loader_circle__8 {
+    transform: rotate(252deg);
+    animation-delay: -0.3s;
+}
+.loader_circle__9 {
+    transform: rotate(288deg);
+    animation-delay: -0.2s;
+}
+.loader_circle__10 {
+    transform: rotate(324deg);
+    animation-delay: -0.1s;
+}
+
+@keyframes circle_animation {
+    0% {
+        opacity: 1;
+    }
+
+    70%, 100% {
+        opacity: 0;
+    }
+}

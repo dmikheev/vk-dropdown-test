@@ -1,11 +1,34 @@
 import UserView from './userView/UserView';
 
+import loaderStyles from './loader.css';
 import styles from './ListView.css';
 
 const BOTTOM_USERS_TO_LOAD_MORE_COUNT = 100;
 const ITEM_HEIGHT = 51;
 const MAX_LIST_HEIGHT = 243;
 const VIEWPORT_USERS_COUNT = 11;
+
+function getLoaderItemHtml(options) {
+    const classNamesArr = [loaderStyles.loader];
+    if (options.className) {
+        classNamesArr.push(options.className);
+    }
+
+    return (
+`<div class="${classNamesArr.join(' ')}">
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__1}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__2}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__3}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__4}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__5}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__6}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__7}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__8}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__9}"></div>
+    <div class="${loaderStyles.loader_circle} ${loaderStyles.loader_circle__10}"></div>
+</div>`
+    );
+}
 
 /**
  * @callback ListView~loadMoreUsers
@@ -17,6 +40,7 @@ const VIEWPORT_USERS_COUNT = 11;
  * @property {boolean} areAllUsersLoaded
  * @property {boolean} areUserPhotosDisabled
  * @property {string} [className]
+ * @property {boolean} isLoading
  * @property {ListView~loadMoreUsers} loadMoreUsers
  * @property {UserView~onClick} onUserClick
  * @property {User[]} users
@@ -38,6 +62,7 @@ export default class ListView {
         this.state = {
             areAllUsersLoaded: options.areAllUsersLoaded,
             areUsersLoading: false,
+            isLoading: options.isLoading,
             topVisibleUserIdx: 0,
             users: options.users,
         };
@@ -72,6 +97,9 @@ export default class ListView {
         if (this.state.users === users) {
             return;
         }
+        if (users.length === 0 && this.state.users.length === 0) {
+            return;
+        }
 
         this.state.users = users;
 
@@ -96,9 +124,14 @@ export default class ListView {
 
         if (this.state.users.length === 0) {
             this.element.style.height = null;
-            this.element.innerHTML = (
-                `<div class="${styles.item__no_results}">Пользователь не найден</div>`
-            );
+            this.element.innerHTML = this.state.isLoading
+                ? (
+                    `<div class="${styles.item__loader}">
+                        ${getLoaderItemHtml({ className: styles.loader })}
+                    </div>`
+                ) : (
+                    `<div class="${styles.item__no_results}">Пользователь не найден</div>`
+                );
             return;
         }
 
@@ -225,5 +258,38 @@ export default class ListView {
         }
 
         return newTopVisibleUserIdx;
+    }
+
+    setIsLoading(value) {
+        if (this.state.isLoading === value) {
+            return;
+        }
+
+        this.state.isLoading = value;
+        this.toggleLoaderIfNeeded();
+    }
+
+    toggleLoaderIfNeeded() {
+        if (this.state.isLoading) {
+            this.renderLoaderIfNeeded();
+        } else {
+            this.removeLoaderIfNeeded();
+        }
+    }
+
+    renderLoaderIfNeeded() {
+        if (!this.state.isLoading || this.state.users.length !== 0) {
+            return;
+        }
+
+        this.renderUsers();
+    }
+
+    removeLoaderIfNeeded() {
+        if (this.state.isLoading && this.state.users.length === 0) {
+            return;
+        }
+
+        this.renderUsers();
     }
 }

@@ -49,7 +49,7 @@ function isWrongLangPrefix(input, query, keysMap) {
     }
 
     for (let i = 0; i < query.length; i++) {
-        if (keysMap[input[i]] !== query[i]) {
+        if (input[i] !== query[i] && keysMap[input[i]] !== query[i]) {
             return false;
         }
     }
@@ -105,8 +105,8 @@ function getWrongLanguageVariant(input, keysMap) {
 
 function isTransliteratedWrongLangPrefix(input, query, keysMap, transliterationMap) {
     return isTransliteratedPrefix(
-        getWrongLanguageVariant(input, keysMap),
-        query,
+        input,
+        getWrongLanguageVariant(query, keysMap),
         transliterationMap,
     );
 }
@@ -121,8 +121,8 @@ function isStringSuitableForQuery(input, query) {
         || isWrongLangPrefix(input, query, enKeysMap)
         || isTransliteratedPrefix(input, query, ruTransliterationMap)
         || isTransliteratedPrefix(input, query, enTransliterationMap)
-        || isTransliteratedWrongLangPrefix(input, query, ruKeysMap, enTransliterationMap)
-        || isTransliteratedWrongLangPrefix(input, query, enKeysMap, ruTransliterationMap);
+        || isTransliteratedWrongLangPrefix(input, query, enKeysMap, enTransliterationMap)
+        || isTransliteratedWrongLangPrefix(input, query, ruKeysMap, ruTransliterationMap);
 }
 
 function isSomeSuitableForQuery(strings, query) {

@@ -29,12 +29,15 @@ function filterUsers(query) {
     return users.filter(createQueryChecker(normalizedQuery));
 }
 
-const createQueryChecker = (query) => (user) => isSomeSuitableForQuery(
-    [
-        user.name.toLowerCase(),
-        user.lastName.toLowerCase(),
-        user.domain.toLowerCase(),
-        user.occupation.toLowerCase(),
-    ],
-    query,
-);
+const createQueryChecker = (query) => (user) => {
+    const lastNameLower = user.lastName.toLowerCase();
+    return isSomeSuitableForQuery(
+        [
+            user.name.toLowerCase() + ' ' + lastNameLower,
+            lastNameLower,
+            user.domain.toLowerCase(),
+            user.occupation.toLowerCase(),
+        ],
+        query,
+    )
+};

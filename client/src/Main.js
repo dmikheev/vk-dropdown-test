@@ -14,14 +14,17 @@ function getUsersFilteredByQuery(users, query) {
 
     const normalizedQuery = query.toLowerCase();
 
-    return users.filter(user => isSomeSuitableForQuery(
-        [
-            user.name.toLowerCase(),
-            user.lastName.toLowerCase(),
-            user.occupation.toLowerCase(),
-        ],
-        normalizedQuery,
-    ));
+    return users.filter((user) => {
+        const lastNameLower = user.lastName.toLowerCase();
+        return isSomeSuitableForQuery(
+            [
+                `${user.name.toLowerCase()} ${lastNameLower}`,
+                lastNameLower,
+                user.occupation.toLowerCase(),
+            ],
+            normalizedQuery,
+        );
+    });
 }
 
 /**
@@ -35,6 +38,7 @@ function getUsersFilteredByQuery(users, query) {
 /**
  * @typedef {Object} DropdownMainState
  * @property {string} filterQuery
+ * @property {boolean} isLoading
  * @property {Request|null} lastRequest
  * @property {number} selectedUser
  * @property {number[]} selectedUsers
@@ -57,6 +61,7 @@ export default class DropdownMain {
         /** @type {DropdownMainState} */
         this.state = {
             filterQuery: '',
+            isLoading: false,
             lastRequest: null,
             selectedUser: null,
             selectedUsers: [],
@@ -90,6 +95,7 @@ export default class DropdownMain {
     render() {
         const dropdownView = new DropdownView({
             areUserPhotosDisabled: this.options.areUserPhotosDisabled,
+            isLoading: this.state.isLoading,
             isSelectionMultiple: this.options.isSelectionMultiple,
             loadMoreUsers: this.loadMoreUsers,
             onInputChange: this.onFilterQueryChange,
@@ -124,12 +130,15 @@ export default class DropdownMain {
             && !this.state.lastRequest.isCompleted()
         ) {
             this.state.lastRequest.abort();
+            this.setIsLoading(false);
         }
 
         if (this.serverFiltersCache.getFilter(this.state.filterQuery)) {
+            this.setIsLoading(false);
             return;
         }
 
+        this.setIsLoading(true);
         this.state.lastRequest = UsersStore.load(this.state.filterQuery, 0, (response) => {
             this.serverFiltersCache.saveResponseData(response);
 
@@ -137,6 +146,7 @@ export default class DropdownMain {
                 return;
             }
 
+            this.setIsLoading(false);
             this.updateUsers(response.users, response.users.length === 0);
         });
     }
@@ -161,9 +171,10 @@ export default class DropdownMain {
     }
 
     onFilterQueryChange(value) {
-        this.state.filterQuery = value;
+        const valueTrimmed = value.trim();
+        this.state.filterQuery = valueTrimmed;
 
-        const savedFilter = this.serverFiltersCache.getFilter(value);
+        const savedFilter = this.serverFiltersCache.getFilter(valueTrimmed);
         if (savedFilter) {
             this.updateUsers(
                 savedFilter.userIds.map(id => UsersStore.getUser(id)),
@@ -174,7 +185,9 @@ export default class DropdownMain {
         }
 
         this.filterUsers();
-        this.loadUsersDebounced(value);
+
+        this.setIsLoading(true);
+        this.loadUsersDebounced(valueTrimmed);
     }
 
     onListUserClick(userId) {
@@ -207,7 +220,7 @@ export default class DropdownMain {
 
     getFilteredUsers() {
         const queryFilteredUsers = getUsersFilteredByQuery(
-            UsersStore.getAll(),
+            UsersStore.get1000(),
             this.state.filterQuery,
         );
         return this.getUsersFilteredFromSelected(queryFilteredUsers);
@@ -218,5 +231,14 @@ export default class DropdownMain {
             this.options.isSelectionMultiple
                 ? this.state.selectedUsers.indexOf(user.id) === -1
                 : this.state.selectedUser !== user.id));
+    }
+
+    setIsLoading(value) {
+        if (this.state.isLoading === value) {
+            return;
+        }
+
+        this.state.isLoading = value;
+        this.children.dropdownView.setIsLoading(value);
     }
 }

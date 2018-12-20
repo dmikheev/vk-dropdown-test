@@ -29,8 +29,8 @@ class UsersStore {
         return this.usersData[id];
     }
 
-    getAll() {
-        return Object.keys(this.usersData).map(key => this.usersData[key]);
+    get1000() {
+        return Object.keys(this.usersData).map(key => this.usersData[key]).slice(0, 1000);
     }
 
     saveUsersData(users) {

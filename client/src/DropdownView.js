@@ -35,6 +35,7 @@ function renderArrow() {
  * @typedef {Object} DropdownViewOptions
  * @property {boolean} areAllUsersLoaded
  * @property {boolean} areUserPhotosDisabled
+ * @property {boolean} isLoading
  * @property {boolean} isSelectionMultiple
  * @property {DropdownView~loadMoreUsers} loadMoreUsers
  * @property {DropdownView~onInputChange} onInputChange
@@ -74,6 +75,7 @@ export default class DropdownView {
 
         this.state = {
             areAllUsersLoaded: options.areAllUsersLoaded,
+            isLoading: options.isLoading,
             isOpen: false,
             selectedUser: options.selectedUser,
             selectedUsers: options.selectedUsers,
@@ -189,6 +191,7 @@ export default class DropdownView {
         const list = new ListView({
             className: styles.list,
             areUserPhotosDisabled: this.options.areUserPhotosDisabled,
+            isLoading: this.state.isLoading,
             loadMoreUsers: this.options.loadMoreUsers,
             onUserClick: this.options.onListUserClick,
             areAllUsersLoaded: this.state.areAllUsersLoaded,
@@ -353,5 +356,14 @@ export default class DropdownView {
         this.state.selectedUsers = users;
         this.updateOpen(false);
         this.children.selectedUsers.updateSelectedUsers(this.getSelectedUsers());
+    }
+
+    setIsLoading(value) {
+        if (this.state.isLoading === value) {
+            return;
+        }
+
+        this.state.isLoading = value;
+        this.children.list.setIsLoading(value);
     }
 }
