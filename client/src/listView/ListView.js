@@ -5,7 +5,7 @@ import styles from './ListView.css';
 const BOTTOM_USERS_TO_LOAD_MORE_COUNT = 100;
 const ITEM_HEIGHT = 51;
 const MAX_LIST_HEIGHT = 243;
-const VIEWPORT_USERS_COUNT = 25;
+const VIEWPORT_USERS_COUNT = 11;
 
 /**
  * @callback ListView~loadMoreUsers
@@ -214,7 +214,8 @@ export default class ListView {
 
     getTopVisibleUserIndex() {
         const { scrollTop } = this.element;
-        let newTopVisibleUserIdx = Math.floor(scrollTop / ITEM_HEIGHT) - 10;
+        const usersAboveListTopCount = Math.floor((VIEWPORT_USERS_COUNT - 5) / 2);
+        let newTopVisibleUserIdx = Math.floor(scrollTop / ITEM_HEIGHT) - usersAboveListTopCount;
         const lastTopUserIdx = this.state.users.length - VIEWPORT_USERS_COUNT;
         if (newTopVisibleUserIdx > lastTopUserIdx) {
             newTopVisibleUserIdx = lastTopUserIdx;
