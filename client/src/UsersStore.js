@@ -1,15 +1,12 @@
 import UsersLoader from './UsersLoader';
 
-class UsersStore {
-    constructor() {
-        this.usersData = {};
-    }
-
+export default class UsersStore {
     /**
-     * @param {UserLoadConfig} config
+     * @param {{ loadConfig: UserLoadConfig }} options
      */
-    initLoader(config) {
-        this.usersLoader = new UsersLoader(config);
+    constructor(options) {
+        this.usersData = {};
+        this.usersLoader = new UsersLoader(options.loadConfig);
     }
 
     /**
@@ -39,5 +36,3 @@ class UsersStore {
         });
     }
 }
-
-export default new UsersStore();

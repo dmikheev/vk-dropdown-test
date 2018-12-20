@@ -83,8 +83,10 @@ export default class DropdownMain {
             USERS_LOAD_ON_FILTER_DEBOUNCE_INTERVAL,
         );
 
-        UsersStore.initLoader(options.usersLoadConfig);
-        UsersStore.saveUsersData(options.initialUsers);
+        this.usersStore = new UsersStore({
+            loadConfig: options.usersLoadConfig,
+        });
+        this.usersStore.saveUsersData(options.initialUsers);
 
         this.serverFiltersCache = new ServerFiltersCache();
         this.serverFiltersCache.saveFilterUsers(options.initialUsers.map(user => user.id), '');
@@ -101,8 +103,8 @@ export default class DropdownMain {
             onInputChange: this.onFilterQueryChange,
             onListUserClick: this.onListUserClick,
             onSelectedUserRemoveClick: this.onSelectedUserRemoveClick,
-            selectedUser: UsersStore.getUser(this.state.selectedUser),
-            selectedUsers: this.state.selectedUsers.map(id => UsersStore.getUser(id)),
+            selectedUser: this.usersStore.getUser(this.state.selectedUser),
+            selectedUsers: this.state.selectedUsers.map(id => this.usersStore.getUser(id)),
             areAllUsersLoaded: false,
             users: this.state.users,
         });
@@ -139,7 +141,7 @@ export default class DropdownMain {
         }
 
         this.setIsLoading(true);
-        this.state.lastRequest = UsersStore.load(this.state.filterQuery, 0, (response) => {
+        this.state.lastRequest = this.usersStore.load(this.state.filterQuery, 0, (response) => {
             this.serverFiltersCache.saveResponseData(response);
 
             if (response.query !== this.state.filterQuery) {
@@ -152,7 +154,7 @@ export default class DropdownMain {
     }
 
     loadMoreUsers() {
-        this.state.lastRequest = UsersStore.load(
+        this.state.lastRequest = this.usersStore.load(
             this.state.filterQuery,
             this.state.users.length,
             (response) => {
@@ -177,7 +179,7 @@ export default class DropdownMain {
         const savedFilter = this.serverFiltersCache.getFilter(valueTrimmed);
         if (savedFilter) {
             this.updateUsers(
-                savedFilter.userIds.map(id => UsersStore.getUser(id)),
+                savedFilter.userIds.map(id => this.usersStore.getUser(id)),
                 savedFilter.isFullyLoaded,
             );
 
@@ -200,13 +202,15 @@ export default class DropdownMain {
 
     updateSelectedUser(userId) {
         this.state.selectedUser = userId;
-        this.children.dropdownView.updateSelectedUser(UsersStore.getUser(userId));
+        this.children.dropdownView.updateSelectedUser(this.usersStore.getUser(userId));
         this.filterUsers();
     }
 
     updateSelectedUsers(userIds) {
         this.state.selectedUsers = userIds;
-        this.children.dropdownView.updateSelectedUsers(userIds.map(UsersStore.getUser, UsersStore));
+        this.children.dropdownView.updateSelectedUsers(
+            userIds.map(this.usersStore.getUser, this.usersStore),
+        );
         this.filterUsers();
     }
 
@@ -220,7 +224,7 @@ export default class DropdownMain {
 
     getFilteredUsers() {
         const queryFilteredUsers = getUsersFilteredByQuery(
-            UsersStore.get1000(),
+            this.usersStore.get1000(),
             this.state.filterQuery,
         );
         return this.getUsersFilteredFromSelected(queryFilteredUsers);
