@@ -1,4 +1,4 @@
-import { getSearchQueryVariants } from '../shared/getSearchQueryVariants';
+import { isSomeSuitableForQuery } from '../shared/isSomeSuitableForQuery';
 
 import DropdownView from './DropdownView';
 import ServerFiltersCache from './ServerFiltersCache';
@@ -13,27 +13,15 @@ function getUsersFilteredByQuery(users, query) {
     }
 
     const normalizedQuery = query.toLowerCase();
-    const queryVariants = getSearchQueryVariants(normalizedQuery);
 
-    return users.filter((user) => {
-        if (queryVariants.some(
-            queryVariant => user.name.toLowerCase().indexOf(queryVariant) === 0,
-        )) {
-            return true;
-        }
-        if (queryVariants.some(
-            queryVariant => user.lastName.toLowerCase().indexOf(queryVariant) === 0,
-        )) {
-            return true;
-        }
-        if (queryVariants.some(
-            queryVariant => user.occupation.toLowerCase().indexOf(queryVariant) === 0,
-        )) {
-            return true;
-        }
-
-        return false;
-    });
+    return users.filter(user => isSomeSuitableForQuery(
+        [
+            user.name.toLowerCase(),
+            user.lastName.toLowerCase(),
+            user.occupation.toLowerCase(),
+        ],
+        normalizedQuery,
+    ));
 }
 
 /**

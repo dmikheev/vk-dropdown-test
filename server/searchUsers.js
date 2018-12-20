@@ -1,4 +1,4 @@
-const getSearchQueryVariants = require('../client/shared/getSearchQueryVariants').getSearchQueryVariants;
+const isSomeSuitableForQuery = require('../client/shared/isSomeSuitableForQuery').isSomeSuitableForQuery;
 
 const users = require('./users.json');
 
@@ -24,33 +24,17 @@ function filterUsers(query) {
         return users;
     }
 
-    return users.filter((user) => isUserSuitableForQuery(user, query));
-}
-
-function isUserSuitableForQuery(user, query) {
     const normalizedQuery = query.toLowerCase();
-    const queryVariants = getSearchQueryVariants(normalizedQuery);
 
-    if (queryVariants.some(
-        queryVariant => user.name.toLowerCase().indexOf(queryVariant) === 0,
-    )) {
-        return true;
-    }
-    if (queryVariants.some(
-        queryVariant => user.lastName.toLowerCase().indexOf(queryVariant) === 0,
-    )) {
-        return true;
-    }
-    if (queryVariants.some(
-        queryVariant => user.domain.toLowerCase().indexOf(queryVariant) === 0,
-    )) {
-        return true;
-    }
-    if (queryVariants.some(
-        queryVariant => user.occupation.toLowerCase().indexOf(queryVariant) === 0,
-    )) {
-        return true;
-    }
-
-    return false;
+    return users.filter(createQueryChecker(normalizedQuery));
 }
+
+const createQueryChecker = (query) => (user) => isSomeSuitableForQuery(
+    [
+        user.name.toLowerCase(),
+        user.lastName.toLowerCase(),
+        user.domain.toLowerCase(),
+        user.occupation.toLowerCase(),
+    ],
+    query,
+);
