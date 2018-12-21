@@ -29,10 +29,10 @@ function getUsersFilteredByQuery(users, query) {
 
 /**
  * @typedef {Object} DropdownMainOptions
- * @property {boolean} [areUserPhotosDisabled]
- * @property {User[]} initialUsers
- * @property {boolean} isSelectionMultiple
- * @property {UserLoadConfig} usersLoadConfig
+ * @property {boolean} [areUserPhotosDisabled=false] - true, если нужно отключить показ аватаров пользователей
+ * @property {boolean} [isSelectionMultiple=false] - true, если можно выбирать несколько пользователей
+ * @property {User[]} initialUsers - начальные данные пользователей
+ * @property {UserLoadConfig} usersLoadConfig - параметры загрузки пользователей
  */
 
 /**
@@ -92,6 +92,22 @@ export default class DropdownMain {
         this.serverFiltersCache.saveFilterUsers(options.initialUsers.map(user => user.id), '');
 
         this.render();
+    }
+
+    /**
+     * @return {number[]}
+     */
+    getSelectedUserIds() {
+        return this.options.isSelectionMultiple
+            ? this.state.selectedUsers
+            : [this.state.selectedUser];
+    }
+
+    /**
+     * @return {User[]}
+     */
+    getSelectedUsers() {
+        return this.getSelectedUserIds().map(id => this.usersStore.getUser(id));
     }
 
     render() {
