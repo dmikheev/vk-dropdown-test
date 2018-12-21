@@ -189,10 +189,10 @@ export default class ListView {
             const delta = newTopVisibleUserIdx - this.state.topVisibleUserIdx;
             let firstUserToRenderIdx;
             const lastUserToRenderIdx = Math.min(
-                newTopVisibleUserIdx + VIEWPORT_USERS_COUNT,
+                newTopVisibleUserIdx + VIEWPORT_USERS_COUNT - 1,
                 this.state.users.length - 1,
             );
-            if (delta > VIEWPORT_USERS_COUNT) {
+            if (delta >= VIEWPORT_USERS_COUNT) {
                 this.itemsContainer.innerHTML = '';
                 firstUserToRenderIdx = newTopVisibleUserIdx;
             } else {
@@ -200,7 +200,7 @@ export default class ListView {
                     this.itemsContainer.removeChild(this.itemsContainer.children[0]);
                 }
 
-                firstUserToRenderIdx = lastUserToRenderIdx - delta;
+                firstUserToRenderIdx = lastUserToRenderIdx - delta + 1;
             }
 
             for (let i = firstUserToRenderIdx; i <= lastUserToRenderIdx; i++) {
@@ -212,9 +212,9 @@ export default class ListView {
             const delta = this.state.topVisibleUserIdx - newTopVisibleUserIdx;
             const firstUserToRenderIdx = newTopVisibleUserIdx;
             let lastUserToRenderIdx;
-            if (delta > VIEWPORT_USERS_COUNT) {
+            if (delta >= VIEWPORT_USERS_COUNT) {
                 this.itemsContainer.innerHTML = '';
-                lastUserToRenderIdx = newTopVisibleUserIdx + VIEWPORT_USERS_COUNT;
+                lastUserToRenderIdx = newTopVisibleUserIdx + VIEWPORT_USERS_COUNT - 1;
             } else {
                 for (let i = 0; i < delta; i++) {
                     const lastChild = this.itemsContainer
@@ -222,7 +222,7 @@ export default class ListView {
                     this.itemsContainer.removeChild(lastChild);
                 }
 
-                lastUserToRenderIdx = newTopVisibleUserIdx + delta;
+                lastUserToRenderIdx = newTopVisibleUserIdx + delta - 1;
             }
 
             for (let i = lastUserToRenderIdx; i >= firstUserToRenderIdx; i--) {
