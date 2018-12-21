@@ -364,6 +364,10 @@ export default class DropdownView {
         }
 
         this.state.isLoading = value;
+
+        if (!this.children.list) {
+            return;
+        }
         this.children.list.setIsLoading(value);
     }
 }

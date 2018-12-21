@@ -38,9 +38,10 @@ export default class UsersLoader {
      * @param {string} [query]
      * @param {number} [offset]
      * @param cb
+     * @param [errback]
      * @return {Request}
      */
-    load(query, offset, cb) {
+    load(query, offset, cb, errback) {
         if (this.lastRequestData) {
             if (this.lastRequestData.query === query && this.lastRequestData.offset === offset) {
                 return this.lastRequestData.request;
@@ -63,6 +64,9 @@ export default class UsersLoader {
         request.addCallback((response) => {
             cb(response);
         });
+        if (errback) {
+            request.addErrback(errback);
+        }
 
         this.lastRequestData = {
             query,

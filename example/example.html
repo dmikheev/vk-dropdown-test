@@ -58,6 +58,7 @@
 <body>
     <div id="dropdown1" style="display: inline-block; vertical-align: top;"></div>
     <div id="dropdown2" style="display: inline-block; vertical-align: top; margin-left: 20px;"></div>
+    <div id="dropdown3" style="display: inline-block; vertical-align: top; margin-left: 20px;"></div>
 
     <!-- Вынес начальных пользователей в отдельный файл, записываются в глобальную переменную users -->
     <script type="text/javascript" src="initialUsers.js"></script>
@@ -66,14 +67,22 @@
     <!--<script type="text/javascript" src="http://localhost:3000/main.bundle.js"></script>-->
     <script type="text/javascript">
         var dropdown1 = new VkTestDropdown(document.getElementById('dropdown1'), {
-            areUserPhotosDisabled: false,
+            areUserPhotosDisabled: true,
             initialUsers: users,
-            isSelectionMultiple: true,
+            isSelectionMultiple: false,
             usersLoadConfig: {
                 url: 'http://localhost/api/users/search'
             },
         });
         var dropdown2 = new VkTestDropdown(document.getElementById('dropdown2'), {
+            areUserPhotosDisabled: false,
+            initialUsers: users,
+            isSelectionMultiple: false,
+            usersLoadConfig: {
+                url: 'http://localhost/api/users/search'
+            },
+        });
+        var dropdown3 = new VkTestDropdown(document.getElementById('dropdown3'), {
             areUserPhotosDisabled: false,
             initialUsers: users,
             isSelectionMultiple: true,

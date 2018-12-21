@@ -13,13 +13,14 @@ export default class UsersStore {
      * @param {string} [query]
      * @param {number} [offset]
      * @param cb
+     * @param [errback]
      * @return {Request}
      */
-    load(query, offset, cb) {
+    load(query, offset, cb, errback) {
         return this.usersLoader.load(query, offset, (response) => {
             this.saveUsersData(response.users);
             cb(response);
-        });
+        }, errback);
     }
 
     getUser(id) {

@@ -141,16 +141,23 @@ export default class DropdownMain {
         }
 
         this.setIsLoading(true);
-        this.state.lastRequest = this.usersStore.load(this.state.filterQuery, 0, (response) => {
-            this.serverFiltersCache.saveResponseData(response);
+        this.state.lastRequest = this.usersStore.load(
+            this.state.filterQuery,
+            0,
+            (response) => {
+                this.serverFiltersCache.saveResponseData(response);
 
-            if (response.query !== this.state.filterQuery) {
-                return;
-            }
+                if (response.query !== this.state.filterQuery) {
+                    return;
+                }
 
-            this.setIsLoading(false);
-            this.updateUsers(response.users, response.users.length === 0);
-        });
+                this.setIsLoading(false);
+                this.updateUsers(response.users, response.users.length === 0);
+            },
+            () => {
+                this.setIsLoading(false);
+            },
+        );
     }
 
     loadMoreUsers() {
