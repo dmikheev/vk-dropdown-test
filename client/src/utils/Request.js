@@ -76,7 +76,7 @@ export default class Request {
         if (this.options.params) {
             const queryString = Object.keys(this.options.params)
                 .filter(paramName => typeof this.options.params[paramName] !== 'undefined')
-                .map(paramName => `${paramName}=${this.options.params[paramName]}`)
+                .map(paramName => `${paramName}=${encodeURIComponent(this.options.params[paramName])}`)
                 .join('&');
 
             if (queryString) {

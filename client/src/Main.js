@@ -147,11 +147,11 @@ export default class DropdownMain {
             (response) => {
                 this.serverFiltersCache.saveResponseData(response);
 
+                this.setIsLoading(false);
                 if (response.query !== this.state.filterQuery) {
                     return;
                 }
 
-                this.setIsLoading(false);
                 this.updateUsers(response.users, response.users.length === 0);
             },
             () => {
